@@ -1,4 +1,4 @@
-export { default } from './lib/QuadTree';
+export { default } from './lib/QuadArray';
 
 import { demo } from './demo';
 

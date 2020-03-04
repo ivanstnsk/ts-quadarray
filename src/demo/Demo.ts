@@ -1,8 +1,9 @@
-import QuadTree from '../lib/QuadTree';
+import QuadArray from '../lib/QuadArray';
+import Cell from '../lib/Cell';
 
 let canvasElem: HTMLCanvasElement;
 let canvasTargetElem: HTMLCanvasElement;
-let targetNodes: QuadTree;
+let targetCell: Cell | null;
 
 function renderCounter(counter: number, depth: number): void {
   const divElem = document.createElement('div');
@@ -16,40 +17,45 @@ function renderCounter(counter: number, depth: number): void {
   document.body.appendChild(divElem);
 }
 
-function renderTree(tree: QuadTree, ctx: CanvasRenderingContext2D | null) {
+function renderArray(array: QuadArray, ctx: CanvasRenderingContext2D | null) {
   if (!ctx) return;
 
   ctx.beginPath();
-  ctx.moveTo(tree.bounds.x, tree.bounds.y);
-  ctx.lineTo(tree.bounds.x + tree.bounds.width, tree.bounds.y);
-  ctx.lineTo(tree.bounds.x + tree.bounds.width, tree.bounds.y + tree.bounds.height);
-  ctx.lineTo(tree.bounds.x, tree.bounds.y + tree.bounds.height);
-  ctx.lineTo(tree.bounds.x, tree.bounds.y);
-  ctx.stroke();
 
-  tree.childrens.forEach((child) => {
-    ctx.fillStyle = "green";
-    ctx.fillRect(child.x - 2, child.y - 2, 4, 4);
-  });
-  
-  if (tree.nodes.length > 0) {
-    tree.nodes.forEach((node) => renderTree(node, ctx));
+  for (let i = 0; i < array.cells.length; i++) {
+    ctx.moveTo(i * array.cellWidth, 0);
+    ctx.lineTo(i * array.cellWidth, canvasElem.height);  
   }
+  for (let i = 0; i < array.cells[0].length; i++) {
+    ctx.moveTo(0, i * array.cellHeight);
+    ctx.lineTo(canvasElem.width, i * array.cellHeight);  
+  }
+
+  ctx.stroke();
 }
 
-function renderTargetTree(tree: QuadTree, ctx: CanvasRenderingContext2D | null) {
-  if (!ctx || !tree) return;
+function renderTargetCell(width: number, height: number, cell: Cell | null, ctx: CanvasRenderingContext2D | null) {
+  if (!ctx || !cell) return;
 
   ctx.clearRect(0, 0, canvasTargetElem.width, canvasTargetElem.height);
   ctx.beginPath();
   ctx.strokeStyle = 'red';
-  ctx.moveTo(tree.bounds.x, tree.bounds.y);
-  ctx.lineTo(tree.bounds.x + tree.bounds.width, tree.bounds.y);
-  ctx.lineTo(tree.bounds.x + tree.bounds.width, tree.bounds.y + tree.bounds.height);
-  ctx.lineTo(tree.bounds.x, tree.bounds.y + tree.bounds.height);
-  ctx.lineTo(tree.bounds.x, tree.bounds.y);
+  ctx.moveTo(cell.x * width, cell.y * height);
+  ctx.lineTo(cell.x * width + width, cell.y * height);
+  ctx.lineTo(cell.x * width + width, cell.y * height + height);
+  ctx.lineTo(cell.x * width, cell.y * height + height);
+  ctx.lineTo(cell.x * width, cell.y * height);
   ctx.stroke();
 }
+
+// function renderObject(x: number, y: number, ctx: CanvasRenderingContext2D | null) {
+//   if (!ctx) return;
+
+//   ctx.beginPath();
+//   ctx.fillStyle = "red";
+//   ctx.fillRect(x - 2, y - 2, 4, 4);
+//   ctx.stroke();
+// }
 
 export function demo(): void {
   document.body.style.padding = '0px';
@@ -80,28 +86,24 @@ export function demo(): void {
   const ctx = canvasElem.getContext('2d');
   const ctxTarget = canvasTargetElem.getContext('2d');
   
-  const bounds = {
-    x: 10, 
-    y: 10, 
-    width: window.innerWidth - 20,
-    height: window.innerHeight - 20,
-  };
-  const tree = new QuadTree(bounds, 0, 10, 10);
+  const array = new QuadArray(50, 30, window.innerWidth, window.innerHeight);
 
   // demo insert
-  for (let i = 0; i < 1000; i++) {
-    tree.insert({
-      x: Math.random() * (window.innerWidth - 20) + 10,
-      y: Math.random() * (window.innerHeight - 20) + 10,
-    });
-  }
+  // for (let i = 0; i < 1000; i++) {
+  //   tree.insert({
+  //     x: Math.random() * (window.innerWidth - 20) + 10,
+  //     y: Math.random() * (window.innerHeight - 20) + 10,
+  //   });
+  // }
 
   canvasTargetElem.onmousemove = (event) => {
     const { pageX, pageY } = event;
-    targetNodes = tree.retrive(pageX, pageY);
-    renderTargetTree(targetNodes, ctxTarget);
+    targetCell = array.retrive(pageX, pageY);
+    renderTargetCell(array.cellWidth, array.cellHeight, targetCell, ctxTarget);
+
+    // targetNodes.childrens.forEach((child) => renderObject(child.x, child.y, ctxTarget));
   }
 
-  renderTree(tree, ctx);
+  renderArray(array, ctx);
   renderCounter(30000, 0);
 }
