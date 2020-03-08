@@ -48,15 +48,6 @@ function renderTargetCell(width: number, height: number, cell: Cell | null, ctx:
   ctx.stroke();
 }
 
-// function renderObject(x: number, y: number, ctx: CanvasRenderingContext2D | null) {
-//   if (!ctx) return;
-
-//   ctx.beginPath();
-//   ctx.fillStyle = "red";
-//   ctx.fillRect(x - 2, y - 2, 4, 4);
-//   ctx.stroke();
-// }
-
 export function demo(): void {
   document.body.style.padding = '0px';
   document.body.style.margin = '0px';
@@ -88,20 +79,10 @@ export function demo(): void {
   
   const array = new QuadArray(50, 30, window.innerWidth, window.innerHeight);
 
-  // demo insert
-  // for (let i = 0; i < 1000; i++) {
-  //   tree.insert({
-  //     x: Math.random() * (window.innerWidth - 20) + 10,
-  //     y: Math.random() * (window.innerHeight - 20) + 10,
-  //   });
-  // }
-
   canvasTargetElem.onmousemove = (event) => {
     const { pageX, pageY } = event;
     targetCell = array.retrive(pageX, pageY);
     renderTargetCell(array.cellWidth, array.cellHeight, targetCell, ctxTarget);
-
-    // targetNodes.childrens.forEach((child) => renderObject(child.x, child.y, ctxTarget));
   }
 
   renderArray(array, ctx);
