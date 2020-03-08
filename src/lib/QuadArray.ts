@@ -50,7 +50,7 @@ export default class QuadArray {
       if (cell) {
         result.push(cell);
       }
-    })
+    });
 
     return result;
   }
