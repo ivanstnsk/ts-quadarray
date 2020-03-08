@@ -3,7 +3,7 @@ import Cell from '../lib/Cell';
 
 let canvasElem: HTMLCanvasElement;
 let canvasTargetElem: HTMLCanvasElement;
-let targetCell: Cell | null;
+let targetCells: Cell[] | null;
 
 function renderCounter(counter: number, depth: number): void {
   const divElem = document.createElement('div');
@@ -32,20 +32,47 @@ function renderArray(array: QuadArray, ctx: CanvasRenderingContext2D | null) {
   }
 
   ctx.stroke();
+
+  for (let i = 0; i < array.cells.length; i++) {
+    for (let j = 0; j < array.cells[0].length; j++) {
+      const cell = array.cells[i][j];
+      ctx.beginPath();
+      ctx.lineWidth = 0;
+      ctx.fillStyle = "#ffffff";
+      cell.children.forEach((child) => {
+        ctx.moveTo(child.x, child.y);
+        ctx.arc(child.x, child.y, 3, 0, 2 * Math.PI);
+      });
+      ctx.fill();
+      ctx.stroke();
+    }
+  }
 }
 
-function renderTargetCell(width: number, height: number, cell: Cell | null, ctx: CanvasRenderingContext2D | null) {
-  if (!ctx || !cell) return;
+function renderTargetCell(width: number, height: number, cells: Cell[] | null, ctx: CanvasRenderingContext2D | null) {
+  if (!ctx || !cells || !cells.length) return;
 
   ctx.clearRect(0, 0, canvasTargetElem.width, canvasTargetElem.height);
-  ctx.beginPath();
-  ctx.strokeStyle = 'red';
-  ctx.moveTo(cell.x * width, cell.y * height);
-  ctx.lineTo(cell.x * width + width, cell.y * height);
-  ctx.lineTo(cell.x * width + width, cell.y * height + height);
-  ctx.lineTo(cell.x * width, cell.y * height + height);
-  ctx.lineTo(cell.x * width, cell.y * height);
-  ctx.stroke();
+  
+  cells.forEach((cell) => {
+    ctx.beginPath();
+    ctx.strokeStyle = 'red';
+    ctx.moveTo(cell.x * width, cell.y * height);
+    ctx.lineTo(cell.x * width + width, cell.y * height);
+    ctx.lineTo(cell.x * width + width, cell.y * height + height);
+    ctx.lineTo(cell.x * width, cell.y * height + height);
+    ctx.lineTo(cell.x * width, cell.y * height);
+    ctx.stroke();
+
+    ctx.beginPath();
+    cell.children.forEach((child) => {
+      ctx.moveTo(child.x, child.y);
+      ctx.arc(child.x, child.y, 3, 0, 2 * Math.PI);
+    });
+    ctx.fillStyle = "#FF0000";
+    ctx.fill();
+    ctx.stroke();
+  });
 }
 
 export function demo(): void {
@@ -79,10 +106,28 @@ export function demo(): void {
   
   const array = new QuadArray(50, 30, window.innerWidth, window.innerHeight);
 
+  for (let i = 0; i < 5000; i++) {
+    const x = Math.random() * window.innerWidth;
+    const y = Math.random() * window.innerHeight;
+
+    array.add({ x, y });
+  }
+
   canvasTargetElem.onmousemove = (event) => {
     const { pageX, pageY } = event;
-    targetCell = array.retrive(pageX, pageY);
-    renderTargetCell(array.cellWidth, array.cellHeight, targetCell, ctxTarget);
+    const coords = [
+      { x: pageX, y: pageY },
+      { x: pageX + array.cellWidth, y: pageY },
+      { x: pageX - array.cellWidth, y: pageY },
+      { x: pageX, y: pageY + array.cellHeight },
+      { x: pageX, y: pageY - array.cellHeight },
+      { x: pageX + array.cellWidth, y: pageY + array.cellHeight },
+      { x: pageX + array.cellWidth, y: pageY - array.cellHeight },
+      { x: pageX - array.cellWidth, y: pageY - array.cellHeight },
+      { x: pageX - array.cellWidth, y: pageY + array.cellHeight },
+    ];
+    targetCells = array.retriveAll(coords);
+    renderTargetCell(array.cellWidth, array.cellHeight, targetCells, ctxTarget);
   }
 
   renderArray(array, ctx);

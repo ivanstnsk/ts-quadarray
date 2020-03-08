@@ -1,4 +1,9 @@
-import Cell from './Cell';
+import Cell, { CellChildren } from './Cell';
+
+interface Coord {
+  x: number,
+  y: number,
+}
 
 export default class QuadArray {
   readonly cells: Cell[][];
@@ -18,6 +23,15 @@ export default class QuadArray {
     }
   }
 
+  add(child: CellChildren): boolean {
+    const cell = this.retrive(child.x, child.y);
+    if (cell) {
+      cell.children.push(child);
+      return true;
+    }
+    return false;
+  }
+
   retrive(x: number, y: number): Cell | null {
     const xPad = Math.floor(x / this.cellWidth);
     const yPad = Math.floor(y / this.cellHeight);
@@ -26,5 +40,18 @@ export default class QuadArray {
       return this.cells[xPad][yPad];
     }
     return null;
+  }
+
+  retriveAll(coords: Coord[]): Cell[] {
+    const result: Cell[] = [];
+
+    coords.forEach(({ x, y }) => {
+      const cell = this.retrive(x, y);
+      if (cell) {
+        result.push(cell);
+      }
+    })
+
+    return result;
   }
 }
