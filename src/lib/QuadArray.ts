@@ -32,6 +32,17 @@ export default class QuadArray {
     return false;
   }
 
+  remove(child: CellChildren): boolean {
+    const cell = this.retrive(child.x, child.y);
+    if (cell) {
+      const childIndex = cell.children.indexOf(child);
+      if (childIndex > -1) {
+        return cell.children.splice(childIndex, 1).length > 0;
+      }
+    }
+    return false;
+  }
+
   retrive(x: number, y: number): Cell | null {
     const xPad = Math.floor(x / this.cellWidth);
     const yPad = Math.floor(y / this.cellHeight);
