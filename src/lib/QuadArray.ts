@@ -23,6 +23,10 @@ export default class QuadArray {
     }
   }
 
+  /**
+   * Add new child to the array
+   * @param child to add
+   */
   add(child: CellChildren): boolean {
     const cell = this.retrive(child.x, child.y);
     if (cell) {
@@ -32,6 +36,10 @@ export default class QuadArray {
     return false;
   }
 
+  /**
+   * Removes provided child from a cell
+   * @param child 
+   */
   remove(child: CellChildren): boolean {
     const cell = this.retrive(child.x, child.y);
     if (cell) {
@@ -43,6 +51,11 @@ export default class QuadArray {
     return false;
   }
 
+  /**
+   * Returns a Cell that intersects provided coordinates
+   * @param x coordinate
+   * @param y coordinate
+   */
   retrive(x: number, y: number): Cell | null {
     const xPad = Math.floor(x / this.cellWidth);
     const yPad = Math.floor(y / this.cellHeight);
@@ -53,6 +66,10 @@ export default class QuadArray {
     return null;
   }
 
+   /**
+    * Returns all Cells that intersects provided coordinates as array { x, y }
+    * @param coords array of coordinates { x, y }
+    */
   retriveAll(coords: Coord[]): Cell[] {
     const result: Cell[] = [];
 
