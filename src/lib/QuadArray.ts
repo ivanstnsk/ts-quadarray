@@ -1,10 +1,5 @@
 import Cell, { CellChildren } from './Cell';
 
-interface Coord {
-  x: number,
-  y: number,
-}
-
 export default class QuadArray {
   readonly cells: Cell[][];
   readonly cellWidth: number;
@@ -70,7 +65,7 @@ export default class QuadArray {
     * Returns all Cells that intersects provided coordinates as array { x, y }
     * @param coords array of coordinates { x, y }
     */
-  retriveAll(coords: Coord[]): Cell[] {
+  retriveAll(coords: CellChildren[]): Cell[] {
     const result: Cell[] = [];
 
     coords.forEach(({ x, y }) => {
