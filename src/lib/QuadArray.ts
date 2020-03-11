@@ -1,5 +1,8 @@
 import Cell, { CellChildren } from './Cell';
 
+/* TODO: 
+  Figure out how to split an array
+*/
 export default class QuadArray {
   readonly cells: Cell[][];
   readonly cellWidth: number;
