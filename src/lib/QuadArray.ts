@@ -55,7 +55,7 @@ export default class QuadArray {
     const xPad = Math.floor(x / this.cellWidth);
     const yPad = Math.floor(y / this.cellHeight);
     
-    if (xPad > 0 && xPad < this.cells.length && yPad > 0 && yPad < this.cells[0].length) {
+    if (xPad > -1 && xPad < this.cells.length && yPad > -1 && yPad < this.cells[0].length) {
       return this.cells[xPad][yPad];
     }
     return null;
