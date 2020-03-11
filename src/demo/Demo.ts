@@ -13,7 +13,7 @@ function renderCounter(counter: number, depth: number): void {
   divElem.style.padding = '4px';
   divElem.style.backgroundColor = 'black';
   divElem.style.color = 'white';
-  divElem.innerText = `Objects: ${counter}\nDepth: ${depth}`;
+  divElem.innerText = `Objects: ${counter}\nCells: ${depth}`;
   document.body.appendChild(divElem);
 }
 
@@ -41,7 +41,7 @@ function renderArray(array: QuadArray, ctx: CanvasRenderingContext2D | null) {
       ctx.fillStyle = "#ffffff";
       cell.children.forEach((child) => {
         ctx.moveTo(child.x, child.y);
-        ctx.arc(child.x, child.y, 3, 0, 2 * Math.PI);
+        ctx.arc(child.x, child.y, 2, 0, 2 * Math.PI);
       });
       ctx.fill();
       ctx.stroke();
@@ -67,12 +67,34 @@ function renderTargetCell(width: number, height: number, cells: Cell[] | null, c
     ctx.beginPath();
     cell.children.forEach((child) => {
       ctx.moveTo(child.x, child.y);
-      ctx.arc(child.x, child.y, 3, 0, 2 * Math.PI);
+      ctx.arc(child.x, child.y, 2, 0, 2 * Math.PI);
     });
     ctx.fillStyle = "#FF0000";
     ctx.fill();
     ctx.stroke();
   });
+}
+
+function startGeneratingObject(array: QuadArray, cb: Function) {
+  let counter = 0;
+
+  let interval = setInterval(() => {
+    if (counter > 100) {
+      clearInterval(interval);
+      return;
+    }
+
+    for (let i = 0; i < 100; i++) {
+      const x = Math.random() * window.innerWidth;
+      const y = Math.random() * window.innerHeight;
+  
+      array.add({ x, y });
+    }
+
+    cb();
+
+    counter += 1;
+  }, 500);
 }
 
 export function demo(): void {
@@ -104,14 +126,15 @@ export function demo(): void {
   const ctx = canvasElem.getContext('2d');
   const ctxTarget = canvasTargetElem.getContext('2d');
   
-  const array = new QuadArray(50, 30, window.innerWidth, window.innerHeight);
+  const array = new QuadArray(5, 5, window.innerWidth, window.innerHeight);
 
-  for (let i = 0; i < 5000; i++) {
-    const x = Math.random() * window.innerWidth;
-    const y = Math.random() * window.innerHeight;
+  startGeneratingObject(array, () => {
+    const childrenCount = array.getChildrenCount();
+    const cellsCount = array.getCellsCount();
 
-    array.add({ x, y });
-  }
+    renderArray(array, ctx);
+    renderCounter(childrenCount, cellsCount);
+  });
 
   canvasTargetElem.onmousemove = (event) => {
     const { pageX, pageY } = event;
@@ -129,7 +152,4 @@ export function demo(): void {
     targetCells = array.retriveAll(coords);
     renderTargetCell(array.cellWidth, array.cellHeight, targetCells, ctxTarget);
   }
-
-  renderArray(array, ctx);
-  renderCounter(30000, 0);
 }
