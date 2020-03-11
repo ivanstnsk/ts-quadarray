@@ -4,9 +4,11 @@ export default class QuadArray {
   readonly cells: Cell[][];
   readonly cellWidth: number;
   readonly cellHeight: number;
+  private childrenCount: number;
 
   constructor(xSize: number, ySize: number, width: number, height: number) {
     this.cells = [];
+    this.childrenCount = 0;
     this.cellWidth = width / xSize;
     this.cellHeight = height / ySize;
 
@@ -26,6 +28,7 @@ export default class QuadArray {
     const cell = this.retrive(child.x, child.y);
     if (cell) {
       cell.children.push(child);
+      this.childrenCount += 1;
       return true;
     }
     return false;
@@ -40,7 +43,11 @@ export default class QuadArray {
     if (cell) {
       const childIndex = cell.children.indexOf(child);
       if (childIndex > -1) {
-        return cell.children.splice(childIndex, 1).length > 0;
+        const removed = cell.children.splice(childIndex, 1).length > 0;
+        if (removed) {
+          this.childrenCount -= 1;
+        }
+        return removed;
       }
     }
     return false;
@@ -76,5 +83,16 @@ export default class QuadArray {
     });
 
     return result;
+  }
+
+  getChildrenCount(): number {
+    return this.childrenCount;
+  }
+
+  getCellsCount(): number {
+    if (this.cells.length > 0) {
+      return this.cells.length * this.cells[0].length;
+    }
+    return this.cells.length;
   }
 }
