@@ -1,24 +1,32 @@
-import Cell, { CellChildren } from './Cell';
+import {CellType, CellChildType, QuadArrayType} from './types';
+import {Cell} from './Cell';
+import {CellChild} from './CellChild'; 
 
 /* TODO: 
   Figure out how to split an array
 */
-export default class QuadArray {
-  readonly cells: Cell[][];
-  readonly cellWidth: number;
-  readonly cellHeight: number;
+export default class QuadArray implements QuadArrayType {
+  cells: CellType[][];
+  cellWidth: number;
+  cellHeight: number;
   private childrenCount: number;
+  private cellsCounter = 0;
+  private deepLevel: number;
+  private maxDeepLevel = 5;
+  private childrenPerCell = 20;
 
   constructor(xSize: number, ySize: number, width: number, height: number) {
     this.cells = [];
     this.childrenCount = 0;
     this.cellWidth = width / xSize;
     this.cellHeight = height / ySize;
+    this.deepLevel = 0;
 
     for (let x = 0; x < xSize; x++) {
       this.cells[x] = [];
       for (let y = 0; y < ySize; y++) {
-        this.cells[x][y] = new Cell(x, y);
+        this.cellsCounter += 1;
+        this.cells[x][y] = new Cell(this, this.cellsCounter, x * this.cellWidth, y * this.cellHeight, this.cellWidth, this.cellHeight);
       }  
     }
   }
@@ -27,10 +35,12 @@ export default class QuadArray {
    * Add new child to the array
    * @param child to add
    */
-  add(child: CellChildren): boolean {
-    const cell = this.retrive(child.x, child.y);
+  add(x: number, y: number): boolean {
+    const cell = this.retrive(x, y);
     if (cell) {
-      cell.children.push(child);
+      cell.children.push(
+        new CellChild(cell, x, y)
+      );
       this.childrenCount += 1;
       return true;
     }
@@ -41,7 +51,7 @@ export default class QuadArray {
    * Removes provided child from a cell
    * @param child 
    */
-  remove(child: CellChildren): boolean {
+  remove(child: CellChildType): boolean {
     const cell = this.retrive(child.x, child.y);
     if (cell) {
       const childIndex = cell.children.indexOf(child);
@@ -61,7 +71,7 @@ export default class QuadArray {
    * @param x coordinate
    * @param y coordinate
    */
-  retrive(x: number, y: number): Cell | null {
+  retrive(x: number, y: number): CellType | null {
     const xPad = Math.floor(x / this.cellWidth);
     const yPad = Math.floor(y / this.cellHeight);
     
@@ -75,8 +85,8 @@ export default class QuadArray {
     * Returns all Cells that intersects provided coordinates as array { x, y }
     * @param coords array of coordinates { x, y }
     */
-  retriveAll(coords: CellChildren[]): Cell[] {
-    const result: Cell[] = [];
+  retriveAll(coords: CellChildType[]): CellType[] {
+    const result: CellType[] = [];
 
     coords.forEach(({ x, y }) => {
       const cell = this.retrive(x, y);
@@ -89,7 +99,13 @@ export default class QuadArray {
   }
 
   getChildrenCount(): number {
-    return this.childrenCount;
+    let sum = 0;
+    this.cells.forEach((cellRow) => {
+      cellRow.forEach((cell) => {
+        sum += cell.children.length;
+      })
+    })
+    return sum;
   }
 
   getCellsCount(): number {
@@ -97,5 +113,18 @@ export default class QuadArray {
       return this.cells.length * this.cells[0].length;
     }
     return this.cells.length;
+  }
+
+  transfer(child: CellChildType): boolean {
+    // console.log('prepare to transfer');
+    const nextCell = this.retrive(child.x, child.y);
+    if (nextCell) {
+      const removed = child.cell.removeChild(child);
+      if (removed) {
+        nextCell.addChild(child);
+      }
+      return true;
+    }
+    return false;
   }
 }

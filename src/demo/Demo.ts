@@ -1,9 +1,9 @@
 import QuadArray from '../lib/QuadArray';
-import Cell from '../lib/Cell';
+import {CellType} from '../lib/types';
 
 let canvasElem: HTMLCanvasElement;
 let canvasTargetElem: HTMLCanvasElement;
-let targetCells: Cell[] | null;
+let targetCells: CellType[] | null;
 
 function renderCounter(counter: number, depth: number): void {
   const divElem = document.createElement('div');
@@ -21,6 +21,7 @@ function renderArray(array: QuadArray, ctx: CanvasRenderingContext2D | null) {
   if (!ctx) return;
 
   ctx.beginPath();
+  ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
   for (let i = 0; i < array.cells.length; i++) {
     ctx.moveTo(i * array.cellWidth, 0);
@@ -37,6 +38,8 @@ function renderArray(array: QuadArray, ctx: CanvasRenderingContext2D | null) {
     for (let j = 0; j < array.cells[0].length; j++) {
       const cell = array.cells[i][j];
       ctx.beginPath();
+      ctx.font = "15px Arial";
+      ctx.fillText(`${cell.id}`, i * array.cellWidth + 4, j * array.cellHeight + 13);
       ctx.lineWidth = 0;
       ctx.fillStyle = "#ffffff";
       cell.children.forEach((child) => {
@@ -49,7 +52,7 @@ function renderArray(array: QuadArray, ctx: CanvasRenderingContext2D | null) {
   }
 }
 
-function renderTargetCell(width: number, height: number, cells: Cell[] | null, ctx: CanvasRenderingContext2D | null) {
+function renderTargetCell(width: number, height: number, cells: CellType[] | null, ctx: CanvasRenderingContext2D | null) {
   if (!ctx || !cells || !cells.length) return;
 
   ctx.clearRect(0, 0, canvasTargetElem.width, canvasTargetElem.height);
@@ -57,11 +60,11 @@ function renderTargetCell(width: number, height: number, cells: Cell[] | null, c
   cells.forEach((cell) => {
     ctx.beginPath();
     ctx.strokeStyle = 'red';
-    ctx.moveTo(cell.x * width, cell.y * height);
-    ctx.lineTo(cell.x * width + width, cell.y * height);
-    ctx.lineTo(cell.x * width + width, cell.y * height + height);
-    ctx.lineTo(cell.x * width, cell.y * height + height);
-    ctx.lineTo(cell.x * width, cell.y * height);
+    ctx.moveTo(cell.x, cell.y);
+    ctx.lineTo(cell.x + width, cell.y);
+    ctx.lineTo(cell.x + width, cell.y + height);
+    ctx.lineTo(cell.x, cell.y + height);
+    ctx.lineTo(cell.x, cell.y);
     ctx.stroke();
 
     ctx.beginPath();
@@ -75,26 +78,27 @@ function renderTargetCell(width: number, height: number, cells: Cell[] | null, c
   });
 }
 
-function startGeneratingObject(array: QuadArray, cb: Function) {
-  let counter = 0;
-
-  let interval = setInterval(() => {
-    if (counter > 100) {
-      clearInterval(interval);
-      return;
+function makeMovements(array: QuadArray, cb: Function) {
+  for (let i = 0; i < array.cells.length; i++) {
+    for (let j = 0; j < array.cells[0].length; j++) {
+      const cell = array.cells[i][j];
+      cell.children.forEach((child) => {
+        let nextX = child.x + 4;
+        let nextY = child.y;
+        if (nextX > window.innerWidth) {
+          nextX = 0;
+        }
+        if (nextY > window.innerHeight) {
+          nextY = 0;
+        }
+        child.updatePos(nextX, nextY);
+      });
     }
+  }
 
-    for (let i = 0; i < 100; i++) {
-      const x = Math.random() * window.innerWidth;
-      const y = Math.random() * window.innerHeight;
-  
-      array.add({ x, y });
-    }
+  cb();
 
-    cb();
-
-    counter += 1;
-  }, 500);
+  setTimeout(() => makeMovements(array, cb), 100);
 }
 
 export function demo(): void {
@@ -128,28 +132,37 @@ export function demo(): void {
   
   const array = new QuadArray(5, 5, window.innerWidth, window.innerHeight);
 
-  startGeneratingObject(array, () => {
+  canvasTargetElem.onmousemove = (event) => {
+    const { pageX, pageY } = event;
+    const targetCell = array.retrive(pageX, pageY);
+    if (targetCell) {
+      targetCells = [ targetCell ];
+    }
+    renderTargetCell(array.cellWidth, array.cellHeight, targetCells, ctxTarget);
+  }
+
+  canvasTargetElem.onmousedown = (event) => {
+    const { pageX, pageY } = event;
+
+    for (let i = 0; i < 100; i += 1) {
+      array.add(
+        Math.random() * window.innerWidth,
+        Math.random() * window.innerHeight,
+      );
+    }
+
     const childrenCount = array.getChildrenCount();
     const cellsCount = array.getCellsCount();
 
     renderArray(array, ctx);
     renderCounter(childrenCount, cellsCount);
-  });
 
-  canvasTargetElem.onmousemove = (event) => {
-    const { pageX, pageY } = event;
-    const coords = [
-      { x: pageX, y: pageY },
-      { x: pageX + array.cellWidth, y: pageY },
-      { x: pageX - array.cellWidth, y: pageY },
-      { x: pageX, y: pageY + array.cellHeight },
-      { x: pageX, y: pageY - array.cellHeight },
-      { x: pageX + array.cellWidth, y: pageY + array.cellHeight },
-      { x: pageX + array.cellWidth, y: pageY - array.cellHeight },
-      { x: pageX - array.cellWidth, y: pageY - array.cellHeight },
-      { x: pageX - array.cellWidth, y: pageY + array.cellHeight },
-    ];
-    targetCells = array.retriveAll(coords);
-    renderTargetCell(array.cellWidth, array.cellHeight, targetCells, ctxTarget);
   }
+
+  makeMovements(array, () => {
+    renderArray(array, ctx);
+    const childrenCount = array.getChildrenCount();
+    const cellsCount = array.getCellsCount();
+    renderCounter(childrenCount, cellsCount);
+  });
 }
