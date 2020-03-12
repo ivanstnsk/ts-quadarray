@@ -142,8 +142,7 @@ export function demo(): void {
   }
 
   canvasTargetElem.onmousedown = (event) => {
-    const { pageX, pageY } = event;
-
+    // const { pageX, pageY } = event;
     for (let i = 0; i < 100; i += 1) {
       array.add(
         Math.random() * window.innerWidth,
